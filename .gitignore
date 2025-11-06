@@ -18,5 +18,12 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+<<<<<<< HEAD
 
 terraform.exe
+=======
+>>>>>>> bbf1e92 (Initial commit)
+node_modules/
+.env
+*.log
+dist/
