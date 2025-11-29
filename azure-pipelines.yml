@@ -1,24 +1,26 @@
-
 trigger: none
-
 
 pool:
   name: Prod_infra
 
-steps: 
+steps:
+
+# Install Node.js (this will also install npm)
+- task: NodeTool@0
+  displayName: 'Install Node.js'
+  inputs:
+    versionSpec: '18.x'   # you can change version if needed
+
+# Run npm install
 - task: PowerShell@2
-  displayName: npm install
+  displayName: 'npm install'
   inputs:
     targetType: 'inline'
     script: 'npm install'
 
-
+# Run npm build
 - task: PowerShell@2
-  displayName: npm run
+  displayName: 'npm run build'
   inputs:
     targetType: 'inline'
     script: 'npm run build'
-
-    
-    
-
