@@ -24,3 +24,21 @@ steps:
   inputs:
     targetType: 'inline'
     script: 'npm run build'
+
+
+- task: ArchiveFiles@2
+  inputs:
+    rootFolderOrFile: 'System.DefaultWorkingDirectory)/build/'
+    includeRootFolder: true
+    archiveType: 'zip'
+    archiveFile: 'System.DefaultWorkingDirectory)/build.zip/'
+    replaceExistingArchive: true
+
+- task: PublishPipelineArtifact@1
+  inputs:
+    targetPath: 'System.DefaultWorkingDirectory)/build.zip/'
+    artifact: 'todo-ui'
+    publishLocation: 'pipeline'
+
+
+
