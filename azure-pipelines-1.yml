@@ -5,44 +5,45 @@ pool:
 
 steps:
 
-# 1️⃣ SonarQube Prepare
-- task: SonarQubePrepare@5
-  displayName: 'Prepare SonarQube Analysis'
-  inputs:
-    SonarQube: 'sonarqube-conn'
-    scannerMode: 'CLI'
-    configMode: 'manual'
-    cliProjectKey: 'apps'
-    cliProjectName: 'apps'
-    cliSources: '.'
-
-# 2️⃣ Install Node.js
+# Install Node.js
 - task: NodeTool@0
   displayName: 'Install Node.js'
   inputs:
     versionSpec: '18.x'
 
-# 3️⃣ npm install
+# Install npm dependencies
 - task: PowerShell@2
   displayName: 'npm install'
   inputs:
     targetType: 'inline'
-    script: 'npm install'
+    script: |
+      npm install
 
-# 4️⃣ npm build (Sonar scan yahin code ko read karega)
+# Build the project
 - task: PowerShell@2
   displayName: 'npm run build'
   inputs:
     targetType: 'inline'
-    script: 'npm run build'
+    script: |
+      npm run build
 
-# 5️⃣ SonarQube Publish (Quality Gate)
-- task: SonarQubePublish@5
-  displayName: 'Publish SonarQube Quality Gate'
+# Run SonarQube scan using CLI
+- task: PowerShell@2
+  displayName: 'Run SonarQube Scanner'
   inputs:
-    pollingTimeoutSec: '300'
+    targetType: 'inline'
+    script: |
+      # Set SonarQube environment variables
+      $env:SONAR_HOST_URL="http://your-sonarqube-server"
+      $env:SONAR_LOGIN="YOUR_SONARQUBE_TOKEN"
 
-# 6️⃣ Archive build
+      # Install SonarScanner globally if needed
+      npm install -g sonar-scanner
+
+      # Run scanner
+      sonar-scanner -Dsonar.projectKey=apps -Dsonar.sources=. -Dsonar.projectName=apps
+
+# Archive the build folder
 - task: ArchiveFiles@2
   inputs:
     rootFolderOrFile: '$(System.DefaultWorkingDirectory)/build/'
@@ -51,7 +52,7 @@ steps:
     archiveFile: '$(System.DefaultWorkingDirectory)/build.zip'
     replaceExistingArchive: true
 
-# 7️⃣ Publish artifact
+# Publish the artifact
 - task: PublishPipelineArtifact@1
   inputs:
     targetPath: '$(System.DefaultWorkingDirectory)/build.zip'
