@@ -1,0 +1,59 @@
+trigger: none
+
+pool:
+  name: Prod_infra
+
+steps:
+
+# 1️⃣ SonarQube Prepare
+- task: SonarQubePrepare@5
+  displayName: 'Prepare SonarQube Analysis'
+  inputs:
+    SonarQube: 'sonarqube-conn'
+    scannerMode: 'CLI'
+    configMode: 'manual'
+    cliProjectKey: 'apps'
+    cliProjectName: 'apps'
+    cliSources: '.'
+
+# 2️⃣ Install Node.js
+- task: NodeTool@0
+  displayName: 'Install Node.js'
+  inputs:
+    versionSpec: '18.x'
+
+# 3️⃣ npm install
+- task: PowerShell@2
+  displayName: 'npm install'
+  inputs:
+    targetType: 'inline'
+    script: 'npm install'
+
+# 4️⃣ npm build (Sonar scan yahin code ko read karega)
+- task: PowerShell@2
+  displayName: 'npm run build'
+  inputs:
+    targetType: 'inline'
+    script: 'npm run build'
+
+# 5️⃣ SonarQube Publish (Quality Gate)
+- task: SonarQubePublish@5
+  displayName: 'Publish SonarQube Quality Gate'
+  inputs:
+    pollingTimeoutSec: '300'
+
+# 6️⃣ Archive build
+- task: ArchiveFiles@2
+  inputs:
+    rootFolderOrFile: '$(System.DefaultWorkingDirectory)/build/'
+    includeRootFolder: true
+    archiveType: 'zip'
+    archiveFile: '$(System.DefaultWorkingDirectory)/build.zip'
+    replaceExistingArchive: true
+
+# 7️⃣ Publish artifact
+- task: PublishPipelineArtifact@1
+  inputs:
+    targetPath: '$(System.DefaultWorkingDirectory)/build.zip'
+    artifact: 'todo-ui'
+    publishLocation: 'pipeline'
