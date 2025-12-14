@@ -1,13 +1,31 @@
 trigger: none
 
 pool:
-  name: Prod_infra
+  name: Prod_infra  # Self-hosted agent
 
 steps:
 
+# Check and install Java manually if needed
+- task: PowerShell@2
+  displayName: 'Ensure Java is installed'
+  inputs:
+    targetType: 'inline'
+    script: |
+      if (-not (Get-Command java -ErrorAction SilentlyContinue)) {
+          Write-Host "Java not found. Installing OpenJDK 11..."
+          # Example: download and extract OpenJDK 11 to a local folder
+          $jdkUrl = "https://download.java.net/java/GA/jdk11/13/GPL/openjdk-11_windows-x64_bin.zip"
+          $jdkZip = "$(System.DefaultWorkingDirectory)\jdk11.zip"
+          Invoke-WebRequest -Uri $jdkUrl -OutFile $jdkZip
+          Expand-Archive -Path $jdkZip -DestinationPath "$(System.DefaultWorkingDirectory)\jdk11"
+          setx JAVA_HOME "$(System.DefaultWorkingDirectory)\jdk11\jdk-11"
+          setx PATH "$env:JAVA_HOME\bin;$env:PATH"
+      }
+      java -version
+
 # Install Node.js
 - task: NodeTool@0
-  displayName: 'Install Node.js'
+  displayName: 'Install Node.js 18.x'
   inputs:
     versionSpec: '18.x'
 
