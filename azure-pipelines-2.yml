@@ -29,6 +29,8 @@ stages:
 
     - task: PowerShell@2
       displayName: "Run SAST Analysis"
+      env:
+        SONAR_TOKEN: $(SONAR_TOKEN)
       inputs:
         targetType: 'inline'
         script: |
@@ -36,7 +38,7 @@ stages:
           -Dsonar.projectKey=todo-ui-sast `
           -Dsonar.sources=. `
           -Dsonar.host.url=http://localhost:9000 `
-          -Dsonar.login=$(SONAR_TOKEN) `
+          -Dsonar.login=$env:SONAR_TOKEN `
           -Dsonar.security.hotspots=true
 
 # =========================
@@ -51,6 +53,8 @@ stages:
     steps:
     - task: PowerShell@2
       displayName: "Run SonarQube Scan"
+      env:
+        SONAR_TOKEN: $(SONAR_TOKEN)
       inputs:
         targetType: 'inline'
         script: |
@@ -58,7 +62,7 @@ stages:
           -Dsonar.projectKey=todo-ui `
           -Dsonar.sources=. `
           -Dsonar.host.url=http://localhost:9000 `
-          -Dsonar.login=$(SONAR_TOKEN)
+          -Dsonar.login=$env:SONAR_TOKEN
 
 # =========================
 # Stage 2: Build Stage
