@@ -6,7 +6,7 @@ pool:
 stages:
 
 # ======================================================
-# Stage 0: SAST Scan (Security First)
+# Stage 0: SAST Scan
 # ======================================================
 - stage: SAST_Scan
   displayName: "SAST - Security Scan"
@@ -15,26 +15,14 @@ stages:
     displayName: "Run SAST Scan"
     steps:
 
-    - task: NodeTool@0
-      displayName: "Install Node.js"
-      inputs:
-        versionSpec: '18.x'
-
     - task: PowerShell@2
-      displayName: "Install Sonar Scanner"
-      inputs:
-        targetType: 'inline'
-        script: |
-          npm install -g sonar-scanner
-
-    - task: PowerShell@2
-      displayName: "Run SAST Analysis"
+      displayName: "Run SAST using Sonar CLI"
       env:
         SONAR_TOKEN: $(SONAR_TOKEN)
       inputs:
         targetType: 'inline'
         script: |
-          sonar-scanner -Dsonar.projectKey=todo-ui-sast -Dsonar.sources=. -Dsonar.host.url=http://localhost:9000 -Dsonar.login=$env:SONAR_TOKEN -Dsonar.security.hotspots=true
+          sonar -D sonar.host.url=http://localhost:9000 -D sonar.token=$env:SONAR_TOKEN -D sonar.projectKey=todouimonolathic
 
 # ======================================================
 # Stage 1: Code Quality Scan
@@ -44,17 +32,17 @@ stages:
   dependsOn: SAST_Scan
   jobs:
   - job: SonarScan
-    displayName: "Run SonarQube Scan"
+    displayName: "Run Sonar Code Scan"
     steps:
 
     - task: PowerShell@2
-      displayName: "Run SonarQube Analysis"
+      displayName: "Run Sonar Code Quality Scan"
       env:
         SONAR_TOKEN: $(SONAR_TOKEN)
       inputs:
         targetType: 'inline'
         script: |
-          sonar-scanner -Dsonar.projectKey=todo-ui -Dsonar.sources=. -Dsonar.host.url=http://localhost:9000 -Dsonar.login=$env:SONAR_TOKEN
+          sonar -D sonar.host.url=http://localhost:9000 -D sonar.token=$env:SONAR_TOKEN -D sonar.projectKey=todouimonolathic
 
 # ======================================================
 # Stage 2: Build Stage
@@ -87,14 +75,14 @@ stages:
           npm run build
 
 # ======================================================
-# Stage 3: Package & Publish Artifact
+# Stage 3: Package & Publish
 # ======================================================
 - stage: Package
   displayName: "Archive & Publish Artifact"
   dependsOn: Build
   jobs:
   - job: PackageJob
-    displayName: "Package Build Output"
+    displayName: "Publish Artifact"
     steps:
 
     - task: ArchiveFiles@2
