@@ -5,6 +5,22 @@ pool:
 
 steps:
 
+- task: PowerShell@2
+  displayName: 'Run SonarQube Scanner'
+  inputs:
+    targetType: 'inline'
+    script: |
+      # Set SonarQube environment variables
+      $env:SONAR_HOST_URL="http://your-sonarqube-server"
+      $env:SONAR_LOGIN="YOUR_SONARQUBE_TOKEN"
+
+      # Install SonarScanner globally if needed
+      npm install -g sonar-scanner
+
+      # Run scanner
+      sonar-scanner -Dsonar.projectKey=apps -Dsonar.sources=. -Dsonar.projectName=apps
+
+
 # Install Node.js
 - task: NodeTool@0
   displayName: 'Install Node.js'
@@ -28,20 +44,20 @@ steps:
       npm run build
 
 # Run SonarQube scan using CLI
-- task: PowerShell@2
-  displayName: 'Run SonarQube Scanner'
-  inputs:
-    targetType: 'inline'
-    script: |
-      # Set SonarQube environment variables
-      $env:SONAR_HOST_URL="http://your-sonarqube-server"
-      $env:SONAR_LOGIN="YOUR_SONARQUBE_TOKEN"
+# - task: PowerShell@2
+#   displayName: 'Run SonarQube Scanner'
+#   inputs:
+#     targetType: 'inline'
+#     script: |
+#       # Set SonarQube environment variables
+#       $env:SONAR_HOST_URL="http://your-sonarqube-server"
+#       $env:SONAR_LOGIN="YOUR_SONARQUBE_TOKEN"
 
-      # Install SonarScanner globally if needed
-      npm install -g sonar-scanner
+#       # Install SonarScanner globally if needed
+#       npm install -g sonar-scanner
 
-      # Run scanner
-      sonar-scanner -Dsonar.projectKey=apps -Dsonar.sources=. -Dsonar.projectName=apps
+#       # Run scanner
+#       sonar-scanner -Dsonar.projectKey=apps -Dsonar.sources=. -Dsonar.projectName=apps
 
 # Archive the build folder
 - task: ArchiveFiles@2
