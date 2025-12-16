@@ -5,9 +5,9 @@ pool:
 
 stages:
 
-# =========================
-# Stage 0: SAST Scan
-# =========================
+# ======================================================
+# Stage 0: SAST Scan (Security First)
+# ======================================================
 - stage: SAST_Scan
   displayName: "SAST - Security Scan"
   jobs:
@@ -34,39 +34,31 @@ stages:
       inputs:
         targetType: 'inline'
         script: |
-          sonar-scanner `
-          -Dsonar.projectKey=todo-ui-sast `
-          -Dsonar.sources=. `
-          -Dsonar.host.url=http://localhost:9000 `
-          -Dsonar.login=$env:SONAR_TOKEN `
-          -Dsonar.security.hotspots=true
+          sonar-scanner -Dsonar.projectKey=todo-ui-sast -Dsonar.sources=. -Dsonar.host.url=http://localhost:9000 -Dsonar.login=$env:SONAR_TOKEN -Dsonar.security.hotspots=true
 
-# =========================
-# Stage 1: SonarQube Code Quality
-# =========================
+# ======================================================
+# Stage 1: Code Quality Scan
+# ======================================================
 - stage: SonarQube_Scan
-  displayName: "Code Quality Scan"
+  displayName: "SonarQube Code Quality"
   dependsOn: SAST_Scan
   jobs:
   - job: SonarScan
-    displayName: "SonarQube Analysis"
+    displayName: "Run SonarQube Scan"
     steps:
+
     - task: PowerShell@2
-      displayName: "Run SonarQube Scan"
+      displayName: "Run SonarQube Analysis"
       env:
         SONAR_TOKEN: $(SONAR_TOKEN)
       inputs:
         targetType: 'inline'
         script: |
-          sonar-scanner `
-          -Dsonar.projectKey=todo-ui `
-          -Dsonar.sources=. `
-          -Dsonar.host.url=http://localhost:9000 `
-          -Dsonar.login=$env:SONAR_TOKEN
+          sonar-scanner -Dsonar.projectKey=todo-ui -Dsonar.sources=. -Dsonar.host.url=http://localhost:9000 -Dsonar.login=$env:SONAR_TOKEN
 
-# =========================
+# ======================================================
 # Stage 2: Build Stage
-# =========================
+# ======================================================
 - stage: Build
   displayName: "Build Application"
   dependsOn: SonarQube_Scan
@@ -94,15 +86,15 @@ stages:
         script: |
           npm run build
 
-# =========================
-# Stage 3: Package & Publish
-# =========================
+# ======================================================
+# Stage 3: Package & Publish Artifact
+# ======================================================
 - stage: Package
   displayName: "Archive & Publish Artifact"
   dependsOn: Build
   jobs:
   - job: PackageJob
-    displayName: "Publish Artifact"
+    displayName: "Package Build Output"
     steps:
 
     - task: ArchiveFiles@2
