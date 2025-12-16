@@ -6,19 +6,9 @@ pool:
 steps:
 
 - task: PowerShell@2
-  displayName: 'Run SonarQube Scanner'
   inputs:
     targetType: 'inline'
-    script: |
-      # Set SonarQube environment variables
-      $env:SONAR_HOST_URL="http://your-sonarqube-server"
-      $env:SONAR_LOGIN="YOUR_SONARQUBE_TOKEN"
-
-      # Install SonarScanner globally if needed
-      npm install -g sonar-scanner
-
-      # Run scanner
-      sonar-scanner -Dsonar.projectKey=apps -Dsonar.sources=. -Dsonar.projectName=apps
+    script: 'sonar -D sonar.host.url=http://localhost:9000 -D sonar.token=sqp_e36331a85589a1876c9225c74e911e8c76d98da3 -D sonar.projectKey=todouimonolathic'
 
 
 # Install Node.js
