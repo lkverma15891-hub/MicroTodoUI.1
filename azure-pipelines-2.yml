@@ -1,0 +1,118 @@
+trigger: none
+
+pool:
+  name: Prod_infra
+
+stages:
+
+# =========================
+# Stage 0: SAST Scan
+# =========================
+- stage: SAST_Scan
+  displayName: "SAST - Security Scan"
+  jobs:
+  - job: SAST
+    displayName: "Run SAST Scan"
+    steps:
+
+    - task: NodeTool@0
+      displayName: "Install Node.js"
+      inputs:
+        versionSpec: '18.x'
+
+    - task: PowerShell@2
+      displayName: "Install Sonar Scanner"
+      inputs:
+        targetType: 'inline'
+        script: |
+          npm install -g sonar-scanner
+
+    - task: PowerShell@2
+      displayName: "Run SAST Analysis"
+      inputs:
+        targetType: 'inline'
+        script: |
+          sonar-scanner `
+          -Dsonar.projectKey=todo-ui-sast `
+          -Dsonar.sources=. `
+          -Dsonar.host.url=http://localhost:9000 `
+          -Dsonar.login=$(SONAR_TOKEN) `
+          -Dsonar.security.hotspots=true
+
+# =========================
+# Stage 1: SonarQube Code Quality
+# =========================
+- stage: SonarQube_Scan
+  displayName: "Code Quality Scan"
+  dependsOn: SAST_Scan
+  jobs:
+  - job: SonarScan
+    displayName: "SonarQube Analysis"
+    steps:
+    - task: PowerShell@2
+      displayName: "Run SonarQube Scan"
+      inputs:
+        targetType: 'inline'
+        script: |
+          sonar-scanner `
+          -Dsonar.projectKey=todo-ui `
+          -Dsonar.sources=. `
+          -Dsonar.host.url=http://localhost:9000 `
+          -Dsonar.login=$(SONAR_TOKEN)
+
+# =========================
+# Stage 2: Build Stage
+# =========================
+- stage: Build
+  displayName: "Build Application"
+  dependsOn: SonarQube_Scan
+  jobs:
+  - job: BuildJob
+    displayName: "Node Build"
+    steps:
+
+    - task: NodeTool@0
+      displayName: "Install Node.js"
+      inputs:
+        versionSpec: '18.x'
+
+    - task: PowerShell@2
+      displayName: "npm install"
+      inputs:
+        targetType: 'inline'
+        script: |
+          npm install
+
+    - task: PowerShell@2
+      displayName: "npm run build"
+      inputs:
+        targetType: 'inline'
+        script: |
+          npm run build
+
+# =========================
+# Stage 3: Package & Publish
+# =========================
+- stage: Package
+  displayName: "Archive & Publish Artifact"
+  dependsOn: Build
+  jobs:
+  - job: PackageJob
+    displayName: "Publish Artifact"
+    steps:
+
+    - task: ArchiveFiles@2
+      displayName: "Archive build folder"
+      inputs:
+        rootFolderOrFile: '$(System.DefaultWorkingDirectory)/build'
+        includeRootFolder: true
+        archiveType: 'zip'
+        archiveFile: '$(System.DefaultWorkingDirectory)/build.zip'
+        replaceExistingArchive: true
+
+    - task: PublishPipelineArtifact@1
+      displayName: "Publish Artifact"
+      inputs:
+        targetPath: '$(System.DefaultWorkingDirectory)/build.zip'
+        artifact: 'todo-ui'
+        publishLocation: 'pipeline'
