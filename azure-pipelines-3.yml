@@ -57,49 +57,58 @@ stages:
 #           stylelint "$(System.DefaultWorkingDirectory)/Src" --config stylelint.config.mjs
 
 
+
+# Stage 1.5: SCA Scan (Retire.js)
 # ======================================================
-# Stage 1.5: SCA Scan (retire.js)
-# ======================================================
-- stage: SCA_DependencyScan
-  displayName: "SCA - Dependency Scan (npm audit)"
+- stage: SCA_RetireJS
+  displayName: "SCA - Dependency Scan (Retire.js)"
   jobs:
-  - job: NpmAudit
-    displayName: "Run npm audit"
-    steps:
+    - job: RetireScan
+      displayName: "Run Retire.js Scan"
+      steps:
 
-    - task: NodeTool@0
-      displayName: "Install Node.js"
-      inputs:
-        versionSpec: '18.x'
+        # Install Node.js
+        - task: NodeTool@0
+          displayName: "Install Node.js"
+          inputs:
+            versionSpec: '18.x'
 
-    - task: PowerShell@2
-      displayName: "Install npm dependencies"
-      inputs:
-        targetType: 'inline'
-        script: |
-          npm install
+        # Install npm dependencies
+        - task: PowerShell@2
+          displayName: "Install npm dependencies"
+          inputs:
+            targetType: 'inline'
+            script: |
+              npm install
 
-    - task: PowerShell@2
-      displayName: "Run npm audit (fail on high)"
-      inputs:
-        targetType: 'inline'
-        script: |
-          npm audit --audit-level=high
-          if ($LASTEXITCODE -ne 0) {
-              Write-Error "High severity vulnerabilities found!"
-              exit 1
-          }
+        # Install Retire.js globally
+        - task: PowerShell@2
+          displayName: "Install Retire.js"
+          inputs:
+            targetType: 'inline'
+            script: |
+              npm install -g retire
 
-    - task: PowerShell@2
-      displayName: "Generate npm audit report"
-      inputs:
-        targetType: 'inline'
-        script: |
-          npm audit --json > npm-audit-report.json
+        # Run Retire.js scan on ./public folder
+        - task: PowerShell@2
+          displayName: "Run Retire.js Scan (fail on high)"
+          inputs:
+            targetType: 'inline'
+            script: |
+              retire --path ./public --outputformat json --outputpath retire-report.json --severity high --exitwith 1
 
-    - task: PublishPipelineArtifact@1
-      displayName: "Publish npm audit report"
-      inputs:
-        targetPath: 'npm-audit-report.json'
-        artifact: 'npm-audit-report'
-        publishLocation: 'pipeline'
+        # Generate JSON report (already done in previous step, safe to keep)
+        - task: PowerShell@2
+          displayName: "Generate Retire.js Report"
+          inputs:
+            targetType: 'inline'
+            script: |
+              retire --path ./public --outputformat json --outputpath retire-report.json
+
+        # Publish the report as pipeline artifact
+        - task: PublishPipelineArtifact@1
+          displayName: "Publish Retire.js Report"
+          inputs:
+            targetPath: 'retire-report.json'
+            artifact: 'retirejs-report'
+            publishLocation: 'pipeline'
