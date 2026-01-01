@@ -60,12 +60,11 @@ stages:
 # ======================================================
 # Stage 1.5: SCA Scan (retire.js)
 # ======================================================
-- stage: SCA_RetireJS
-  displayName: "SCA - Dependency Scan (retire.js)"
-  # dependsOn: SonarQube_Scan
+- stage: SCA_DependencyScan
+  displayName: "SCA - Dependency Scan (npm audit)"
   jobs:
-  - job: RetireScan
-    displayName: "Run retire.js Scan"
+  - job: NpmAudit
+    displayName: "Run npm audit"
     steps:
 
     - task: NodeTool@0
@@ -81,88 +80,26 @@ stages:
           npm install
 
     - task: PowerShell@2
-      displayName: "Install retire.js"
+      displayName: "Run npm audit (fail on high)"
       inputs:
         targetType: 'inline'
         script: |
-          npm install -g retire
+          npm audit --audit-level=high
+          if ($LASTEXITCODE -ne 0) {
+              Write-Error "High severity vulnerabilities found!"
+              exit 1
+          }
 
     - task: PowerShell@2
-      displayName: "Run retire.js Scan (fail on high)"
+      displayName: "Generate npm audit report"
       inputs:
         targetType: 'inline'
         script: |
-          retire --node --severity high --exitwith 1
-
-    - task: PowerShell@2
-      displayName: "Generate retire.js Report"
-      inputs:
-        targetType: 'inline'
-        script: |
-          retire --node --outputformat json --outputpath retire-report.json
+          npm audit --json > npm-audit-report.json
 
     - task: PublishPipelineArtifact@1
-      displayName: "Publish retire.js Report"
+      displayName: "Publish npm audit report"
       inputs:
-        targetPath: 'retire-report.json'
-        artifact: 'retirejs-report'
-        publishLocation: 'pipeline'
-
-
-# ======================================================
-# Stage 2: Build Stage
-# ======================================================
-- stage: Build
-  displayName: "Build Application"
-  dependsOn: SCA_RetireJS
-  jobs:
-  - job: BuildJob
-    displayName: "Node Build"
-    steps:
-
-    - task: NodeTool@0
-      displayName: "Install Node.js"
-      inputs:
-        versionSpec: '18.x'
-
-    - task: PowerShell@2
-      displayName: "npm install"
-      inputs:
-        targetType: 'inline'
-        script: |
-          npm install
-
-    - task: PowerShell@2
-      displayName: "npm run build"
-      inputs:
-        targetType: 'inline'
-        script: |
-          npm run build
-
-
-# ======================================================
-# Stage 3: Package & Publish
-# ======================================================
-- stage: Package
-  displayName: "Archive & Publish Artifact"
-  dependsOn: Build
-  jobs:
-  - job: PackageJob
-    displayName: "Publish Artifact"
-    steps:
-
-    - task: ArchiveFiles@2
-      displayName: "Archive build folder"
-      inputs:
-        rootFolderOrFile: '$(System.DefaultWorkingDirectory)/build'
-        includeRootFolder: true
-        archiveType: 'zip'
-        archiveFile: '$(System.DefaultWorkingDirectory)/build.zip'
-        replaceExistingArchive: true
-
-    - task: PublishPipelineArtifact@1
-      displayName: "Publish Artifact"
-      inputs:
-        targetPath: '$(System.DefaultWorkingDirectory)/build.zip'
-        artifact: 'todo-ui'
+        targetPath: 'npm-audit-report.json'
+        artifact: 'npm-audit-report'
         publishLocation: 'pipeline'
