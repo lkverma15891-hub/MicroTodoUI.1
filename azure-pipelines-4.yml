@@ -1,9 +1,9 @@
-# trigger: none
+trigger: none
 
-# pool:
-#   name: Prod_infra
+pool:
+  name: Prod_infra
 
- stages:
+stages:
    
 
 # - task: PowerShell@2
