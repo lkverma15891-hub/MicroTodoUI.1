@@ -4,57 +4,53 @@ pool:
   name: Prod_infra
 
 stages:
+- stage: SAST_Scan
+  displayName: "SAST - Security Scan"
+  jobs:
+  - job: SAST
+    displayName: "Run SAST Scan"
+    steps:
+
+    - task: PowerShell@2
+      displayName: "Run SAST using Sonar CLI"
+      env:
+        SONAR_TOKEN: $(SONAR_TOKEN)
+      inputs:
+        targetType: 'inline'
+        script: |
+          sonar -D sonar.host.url=http://localhost:9000 -D sonar.token=$env:SONAR_TOKEN -D sonar.projectKey=todouimonolathic
+
 
 # ======================================================
-# Stage 0: SAST Scan
+# Stage 1: Code Quality + Lint
 # ======================================================
-# - stage: SAST_Scan
-#   displayName: "SAST - Security Scan"
-#   jobs:
-#   - job: SAST
-#     displayName: "Run SAST Scan"
-#     steps:
+- stage: SonarQube_Scan
+  displayName: "SonarQube Code Quality"
+  dependsOn: SAST_Scan
+  jobs:
+  - job: SonarScan
+    displayName: "Run Sonar Code Scan"
+    steps:
 
-#     - task: PowerShell@2
-#       displayName: "Run SAST using Sonar CLI"
-#       env:
-#         SONAR_TOKEN: $(SONAR_TOKEN)
-#       inputs:
-#         targetType: 'inline'
-#         script: |
-#           sonar -D sonar.host.url=http://localhost:9000 -D sonar.token=$env:SONAR_TOKEN -D sonar.projectKey=todouimonolathic
+    - task: PowerShell@2
+      displayName: "Run Sonar Code Quality Scan"
+      env:
+        SONAR_TOKEN: $(SONAR_TOKEN)
+      inputs:
+        targetType: 'inline'
+        script: |
+          sonar -D sonar.host.url=http://localhost:9000 -D sonar.token=$env:SONAR_TOKEN -D sonar.projectKey=todouimonolathic
 
+            -
 
-# # ======================================================
-# # Stage 1: Code Quality + Lint
-# # ======================================================
-# - stage: SonarQube_Scan
-#   displayName: "SonarQube Code Quality"
-#   dependsOn: SAST_Scan
-#   jobs:
-#   - job: SonarScan
-#     displayName: "Run Sonar Code Scan"
-#     steps:
-
-#     - task: PowerShell@2
-#       displayName: "Run Sonar Code Quality Scan"
-#       env:
-#         SONAR_TOKEN: $(SONAR_TOKEN)
-#       inputs:
-#         targetType: 'inline'
-#         script: |
-#           sonar -D sonar.host.url=http://localhost:9000 -D sonar.token=$env:SONAR_TOKEN -D sonar.projectKey=todouimonolathic
-
-#             -
-
-#     - task: PowerShell@2
-#       displayName: "Lint CSS (Stylelint)"
-#       inputs:
-#         targetType: 'inline'
-#         script: |
-#           npm install -g stylelint
-#           npm install -g stylelint-config-standard
-#           stylelint "$(System.DefaultWorkingDirectory)/Src" --config stylelint.config.mjs
+    - task: PowerShell@2
+      displayName: "Lint CSS (Stylelint)"
+      inputs:
+        targetType: 'inline'
+        script: |
+          npm install -g stylelint
+          npm install -g stylelint-config-standard
+          stylelint "$(System.DefaultWorkingDirectory)/Src" --config stylelint.config.mjs
 
 
 
