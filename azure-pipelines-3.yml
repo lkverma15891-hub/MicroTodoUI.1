@@ -3,6 +3,8 @@ trigger: none
 pool:
   name: Prod_infra
 
+variables:
+- group: sonarqube-secrets   # SONAR_TOKEN (secret)
 stages:
 - stage: SAST_Scan
   displayName: "SAST - Security Scan"
