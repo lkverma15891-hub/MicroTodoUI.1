@@ -51,7 +51,7 @@ stages:
         script: |
           npm install -g stylelint
           npm install -g stylelint-config-standard
-          stylelint "$(System.DefaultWorkingDirectory)/Src" --config stylelint.config.mjs
+          stylelint "$(System.DefaultWorkingDirectory)/src" --config stylelint.config.mjs
             
 
 
