@@ -44,21 +44,17 @@ stages:
 
     #         -
 
-    # - task: PowerShell@2
-    #   displayName: "Lint CSS (Stylelint)"
-    #   inputs:
-    #     targetType: 'inline'
-    #     script: |
-    #       npm install -g stylelint
-    #       npm install -g stylelint-config-standard
-    #       stylelint "$(System.DefaultWorkingDirectory)/Src" --config stylelint.config.mjs
-      - task: PowerShell@2
-        displayName: "Lint CSS (Stylelint)"
-        inputs:
-          targetType: 'inline'
-          script: |
+    - task: PowerShell@2
+      displayName: "Lint CSS (Stylelint)"
+      inputs:
+        targetType: 'inline'
+        script: |
+          # npm install -g stylelint
+          # npm install -g stylelint-config-standard
+          # stylelint "$(System.DefaultWorkingDirectory)/Src" --config stylelint.config.mjs
             npm install stylelint stylelint-config-standard
             npx stylelint "Src/**/*.css" --config "$(System.DefaultWorkingDirectory)/stylelint.config.mjs"
+     
 
 
 
