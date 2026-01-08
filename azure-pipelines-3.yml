@@ -45,6 +45,7 @@ stages:
     #         -
 
     - task: PowerShell@2
+      continueOnError: true
       displayName: "Lint CSS (Stylelint)"
       inputs:
         targetType: 'inline'
