@@ -46,7 +46,7 @@ stages:
             -Dsonar.projectName=todoui-monolithic `
             -Dsonar.sources=. `
             -Dsonar.host.url=http://localhost:9000 `
-            -Dsonar.login=$(SONAR_TOKEN)
+            -Dsonar.login==$env:SONAR_TOKEN
 
     # Archive build
     - task: ArchiveFiles@2
