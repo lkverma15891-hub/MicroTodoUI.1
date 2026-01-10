@@ -13,26 +13,26 @@ stages:
     steps:
 
     # Install Node.js
-    - task: NodeTool@0
-      displayName: 'Install Node.js'
-      inputs:
-        versionSpec: '18.x'
+    # - task: NodeTool@0
+    #   displayName: 'Install Node.js'
+    #   inputs:
+    #     versionSpec: '18.x'
 
-    # Install npm dependencies
-    - task: PowerShell@2
-      displayName: 'npm install'
-      inputs:
-        targetType: 'inline'
-        script: |
-          npm install
+    # # Install npm dependencies
+    # - task: PowerShell@2
+    #   displayName: 'npm install'
+    #   inputs:
+    #     targetType: 'inline'
+    #     script: |
+    #       npm install
 
-    # Build project
-    - task: PowerShell@2
-      displayName: 'npm run build'
-      inputs:
-        targetType: 'inline'
-        script: |
-          npm run build
+    # # Build project
+    # - task: PowerShell@2
+    #   displayName: 'npm run build'
+    #   inputs:
+    #     targetType: 'inline'
+    #     script: |
+    #       npm run build
 
     # SonarQube Scan
     - task: PowerShell@2
@@ -41,12 +41,7 @@ stages:
         targetType: 'inline'
         script: |
           npm install -g sonar-scanner
-          sonar-scanner `
-            -Dsonar.projectKey=todoui-monolithic `
-            -Dsonar.projectName=todoui-monolithic `
-            -Dsonar.sources=. `
-            -Dsonar.host.url=http://localhost:9000 `
-            -Dsonar.login==$env:SONAR_TOKEN
+          sonar-scanner -Dsonar.projectKey=todoui-monolithic -Dsonar.projectName=todoui-monolithic -Dsonar.sources=. -Dsonar.host.url=http://localhost:9000 -Dsonar.login=$env:SONAR_TOKEN
 
     # Archive build
     - task: ArchiveFiles@2
