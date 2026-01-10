@@ -35,13 +35,21 @@ stages:
     #       npm run build
 
     # SonarQube Scan
+    # - task: PowerShell@2
+    #   displayName: 'Run SonarQube Scanner'
+    #   inputs:
+    #     targetType: 'inline'
+    #     script: |
+    #       npm install -g sonar-scanner
+    #       sonar-scanner -D sonar.projectKey=todoui-monolithic -D sonar.projectName=todoui-monolithic -D sonar.sources=. -D sonar.host.url=http://localhost:9000 -D sonar.login=$env:SONAR_TOKEN
     - task: PowerShell@2
       displayName: 'Run SonarQube Scanner'
+      env:
+        SONAR_TOKEN: $(SONAR_TOKEN)
       inputs:
         targetType: 'inline'
         script: |
-          npm install -g sonar-scanner
-          sonar-scanner -D sonar.projectKey=todoui-monolithic -D sonar.projectName=todoui-monolithic -D sonar.sources=. -D sonar.host.url=http://localhost:9000 -D sonar.login=$env:SONAR_TOKEN
+          sonar-scanner -D sonar.projectKey=todoui-monolithic -D sonar.projectName=todoui-monolithic -D sonar.sources=. -D sonar.host.url=http://localhost:9000 -D sonar.token=$env:SONAR_TOKEN
 
     # Archive build
     - task: ArchiveFiles@2
