@@ -1,6 +1,5 @@
-trigger:
-   branches:
-     - main
+trigger: none
+   
 
 pool:
   name: Prod_infra
@@ -16,95 +15,127 @@ stages:
           inputs:
             targetType: inline
             script: 'sonar -D sonar.host.url=http://localhost:9000 -D sonar.token=squ_8be945a71c91c337aae04135ede74bd7b1e1cd98 -D sonar.projectKey=todouimonolathic'
-- stage: code analysis
+- stage: 
   displayName: code scanning
   jobs:
-    - job: 
-      displayName: code quality scanning
-      steps:
-      -  task: PowerShell@2
+  - job: code_scan
+    displayName: code quality scanning
+    steps:
+      - task: PowerShell@2
         inputs:
           targetType: 'inline'
+          pwsh: true
           script: |
-         Set SonarQube environment variables
-         $env:SONAR_HOST_URL="http://your-sonarqube-server"
-         $env:SONAR_LOGIN="YOUR_SONARQUBE_TOKEN"
+            # Set SonarQube environment variables
+            $env:SONAR_HOST_URL="http://localhost:9000"
+            $env:SONAR_LOGIN="$(SONAR_TOKEN)"
 
-      # Install SonarScanner globally if needed
-        npm install -g sonar-scanner
+            # Install SonarScanner globally if needed
+              npm install -g sonar-scanner
 
-      # Run scanner
-        sonar-scanner -Dsonar.projectKey=apps -Dsonar.sources=. -Dsonar.projectName=apps
-      
+            # Run scanner
+              sonar-scanner -Dsonar.projectKey=apps -Dsonar.sources=. -Dsonar.projectName=apps
+
+
+# ===============================
+# Build and Package Stage
+# ===============================
+
 # - stage: BuildAndPackage
-#   disp
-   
+#   displayName: Build and Package
+#   jobs:
+#     - job: build
+#       steps:
 
-# # Install Node.js
-# - task: NodeTool@0
-#   displayName: 'Install Node.js'
+#         # Install Node.js
+#         - task: NodeTool@0
+#           displayName: Install Node.js
+#           inputs:
+#             versionSpec: '18.x'
+
+#         # Install npm dependencies
+#         - task: PowerShell@2
+#           displayName: npm install
+#           inputs:
+#             targetType: inline
+#             pwsh: true
+#             script: |
+#               npm install
+
+#         # Build the project
+#         - task: PowerShell@2
+#           displayName: npm run build
+#           inputs:
+#             targetType: inline
+#             pwsh: true
+#             script: |
+#               npm run build
+
+
+# ===============================
+# SonarQube Scan Stage
+# ===============================
+
+# - stage: SonarScan
+#   displayName: Run SonarQube scan using CLI
+#   jobs:
+#     - job: sonar
+#       steps:
+#         - task: PowerShell@2
+#           displayName: Run SonarQube Scanner
+#           inputs:
+#             targetType: inline
+#             pwsh: true
+#             script: |
+#               # Set SonarQube environment variables
+#               $env:SONAR_HOST_URL = "http://your-sonarqube-server"
+#               $env:SONAR_LOGIN   = "YOUR_SONARQUBE_TOKEN"
+#
+#               # Install SonarScanner
+#               npm install -g sonar-scanner
+#
+#               # Run scanner
+#               sonar-scanner `
+#                 -Dsonar.projectKey=apps `
+#                 -Dsonar.sources=. `
+#                 -Dsonar.projectName=apps
+
+
+# ===============================
+# Archive & Publish
+# ===============================
+
+# - task: ArchiveFiles@2
 #   inputs:
-#     versionSpec: '18.x'
+#     rootFolderOrFile: '$(System.DefaultWorkingDirectory)/build'
+#     includeRootFolder: true
+#     archiveType: zip
+#     archiveFile: '$(System.DefaultWorkingDirectory)/build.zip'
+#     replaceExistingArchive: true
 
-# # Install npm dependencies
-# - task: PowerShell@2
-#   displayName: 'npm install'
+# - task: PublishPipelineArtifact@1
 #   inputs:
-#     targetType: 'inline'
-#     script: |
-#       npm install
+#     targetPath: '$(System.DefaultWorkingDirectory)/build.zip'
+#     artifact: 'todo-ui'
+#     publishLocation: pipeline
 
-# # Build the project
-# - task: PowerShell@2
-#   displayName: 'npm run build'
-#   inputs:
-#     targetType: 'inline'
-#     script: |
-#       npm run build
 
-#   stage: Run SonarQube scan using CLI
-# - task: PowerShell@2
-#   displayName: 'Run SonarQube Scanner'
-#   inputs:
-#     targetType: 'inline'
-#     script: |
-#       # Set SonarQube environment variables
-#       $env:SONAR_HOST_URL="http://your-sonarqube-server"
-#       $env:SONAR_LOGIN="YOUR_SONARQUBE_TOKEN"
+# ===============================
+# Deploy Stage
+# ===============================
 
-#       # Install SonarScanner globally if needed
-#       npm install -g sonar-scanner
-
-#       # Run scanner
-#       sonar-scanner -Dsonar.projectKey=apps -Dsonar.sources=. -Dsonar.projectName=apps
-
-- task: ArchiveFiles@2
-  inputs:
-    rootFolderOrFile: '$(System.DefaultWorkingDirectory)/build/'
-    includeRootFolder: true
-    archiveType: 'zip'
-    archiveFile: '$(System.DefaultWorkingDirectory)/build.zip'
-    replaceExistingArchive: true
-
-# Publish the artifact
-- task: PublishPipelineArtifact@1
-  inputs:
-    targetPath: '$(System.DefaultWorkingDirectory)/build.zip'
-    artifact: 'todo-ui'
-    publishLocation: 'pipeline'
-
-  - stage: deploye
-    displayName: deploye to dev vm
-    jobs:
-      - job: deploye
-        steps:
-        - task: DownloadBuildArtifacts@1
-          inputs:
-            buildType: 'specific'
-            project: '44206846-d19a-4aca-9978-27245d1783de'
-            pipeline: '6'
-            buildVersionToDownload: 'specific'
-            buildId: '53'
-            downloadType: 'single'
-            artifactName: 'todo-ui'
-            downloadPath: '$(System.DefaultWorkingDirectory)/build_artifact'
+# - stage: Deploy
+#   displayName: Deploy to dev VM
+#   jobs:
+#     - job: deploy
+#       steps:
+#         - task: DownloadBuildArtifacts@1
+#           inputs:
+#             buildType: specific
+#             project: '44206846-d19a-4aca-9978-27245d1783de'
+#             pipeline: '6'
+#             buildVersionToDownload: specific
+#             buildId: '53'
+#             downloadType: single
+#             artifactName: 'todo-ui'
+#             downloadPath: '$(System.DefaultWorkingDirectory)/build_artifact'
