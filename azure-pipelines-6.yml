@@ -24,7 +24,7 @@ stages:
       - task: PowerShell@2
         inputs:
           targetType: 'inline'
-          pwsh: true
+          pwsh: false
           script: |
             # Set SonarQube environment variables
               $env:SONAR_HOST_URL="http://localhost:9000"
@@ -34,7 +34,8 @@ stages:
               npm install -g sonar-scanner
 
             # Run scanner
-              sonar-scanner -Dsonar.projectKey=apps -Dsonar.sources=. -Dsonar.projectName=apps
+              sonar-scanner -D sonar.projectKey=apps -D sonar.projectName=apps -D sonar.sources=. -D sonar.host.url=http://localhost:9000 -D sonar.login=$env:SONAR_LOGIN
+
 
 
 # ===============================
