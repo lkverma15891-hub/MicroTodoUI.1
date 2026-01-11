@@ -3,6 +3,8 @@ trigger: none
 
 pool:
   name: Prod_infra
+variables:
+- group: sonarqube-secrets  
 
 stages:
 - stage: SoftwareCompositionAnalysis
