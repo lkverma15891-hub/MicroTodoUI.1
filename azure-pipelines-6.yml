@@ -1,0 +1,110 @@
+trigger:
+   branches:
+     - main
+
+pool:
+  name: Prod_infra
+
+stages:
+- stage: SoftwareCompositionAnalysis
+  displayName: Software Composition Analysis (Dependency Security)
+  jobs:
+    - job: 
+      displayName: scanning
+      steps:
+      -   task:  PowerShell@2
+          inputs:
+            targetType: inline
+            script: 'sonar -D sonar.host.url=http://localhost:9000 -D sonar.token=squ_8be945a71c91c337aae04135ede74bd7b1e1cd98 -D sonar.projectKey=todouimonolathic'
+- stage: code analysis
+  displayName: code scanning
+  jobs:
+    - job: 
+      displayName: code quality scanning
+      steps:
+      -  task: PowerShell@2
+        inputs:
+          targetType: 'inline'
+          script: |
+         Set SonarQube environment variables
+         $env:SONAR_HOST_URL="http://your-sonarqube-server"
+         $env:SONAR_LOGIN="YOUR_SONARQUBE_TOKEN"
+
+      # Install SonarScanner globally if needed
+        npm install -g sonar-scanner
+
+      # Run scanner
+        sonar-scanner -Dsonar.projectKey=apps -Dsonar.sources=. -Dsonar.projectName=apps
+      
+# - stage: BuildAndPackage
+#   disp
+   
+
+# # Install Node.js
+# - task: NodeTool@0
+#   displayName: 'Install Node.js'
+#   inputs:
+#     versionSpec: '18.x'
+
+# # Install npm dependencies
+# - task: PowerShell@2
+#   displayName: 'npm install'
+#   inputs:
+#     targetType: 'inline'
+#     script: |
+#       npm install
+
+# # Build the project
+# - task: PowerShell@2
+#   displayName: 'npm run build'
+#   inputs:
+#     targetType: 'inline'
+#     script: |
+#       npm run build
+
+#   stage: Run SonarQube scan using CLI
+# - task: PowerShell@2
+#   displayName: 'Run SonarQube Scanner'
+#   inputs:
+#     targetType: 'inline'
+#     script: |
+#       # Set SonarQube environment variables
+#       $env:SONAR_HOST_URL="http://your-sonarqube-server"
+#       $env:SONAR_LOGIN="YOUR_SONARQUBE_TOKEN"
+
+#       # Install SonarScanner globally if needed
+#       npm install -g sonar-scanner
+
+#       # Run scanner
+#       sonar-scanner -Dsonar.projectKey=apps -Dsonar.sources=. -Dsonar.projectName=apps
+
+- task: ArchiveFiles@2
+  inputs:
+    rootFolderOrFile: '$(System.DefaultWorkingDirectory)/build/'
+    includeRootFolder: true
+    archiveType: 'zip'
+    archiveFile: '$(System.DefaultWorkingDirectory)/build.zip'
+    replaceExistingArchive: true
+
+# Publish the artifact
+- task: PublishPipelineArtifact@1
+  inputs:
+    targetPath: '$(System.DefaultWorkingDirectory)/build.zip'
+    artifact: 'todo-ui'
+    publishLocation: 'pipeline'
+
+  - stage: deploye
+    displayName: deploye to dev vm
+    jobs:
+      - job: deploye
+        steps:
+        - task: DownloadBuildArtifacts@1
+          inputs:
+            buildType: 'specific'
+            project: '44206846-d19a-4aca-9978-27245d1783de'
+            pipeline: '6'
+            buildVersionToDownload: 'specific'
+            buildId: '53'
+            downloadType: 'single'
+            artifactName: 'todo-ui'
+            downloadPath: '$(System.DefaultWorkingDirectory)/build_artifact'
