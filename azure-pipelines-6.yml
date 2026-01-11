@@ -27,8 +27,8 @@ stages:
           pwsh: true
           script: |
             # Set SonarQube environment variables
-            $env:SONAR_HOST_URL="http://localhost:9000"
-            $env:SONAR_LOGIN="$(SONAR_TOKEN)"
+              $env:SONAR_HOST_URL="http://localhost:9000"
+              $env:SONAR_LOGIN="$(SONAR_TOKEN)"
 
             # Install SonarScanner globally if needed
               npm install -g sonar-scanner
